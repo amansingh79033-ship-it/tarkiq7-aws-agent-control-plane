@@ -1,0 +1,24 @@
+services:
+  control-plane:
+    build: .
+    environment:
+      - ANTHROPIC_API_KEY
+      - COMPOSIO_API_KEY
+      - EXECUTION_MODE
+      - APPROVAL_REQUIRED
+    ports:
+      - "8080:8080"
+    volumes:
+      - task-data:/data
+    depends_on:
+      - executor
+  executor:
+    build: .
+    command: python -m app.executor
+    environment:
+      - EXECUTION_MODE
+    volumes:
+      - task-data:/data
+    privileged: false
+volumes:
+  task-data:
