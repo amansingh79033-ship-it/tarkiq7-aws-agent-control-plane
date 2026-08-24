@@ -14,10 +14,8 @@ class Task(BaseModel):
     request:str
     environment:str="sandbox"
     account_alias:str="demo"
-
 def persist(x):
     (DATA/f"{x['id']}.json").write_text(json.dumps(x,indent=2), encoding="utf-8")
-
 @app.get("/")
 def home(): return FileResponse(ROOT / "ui" / "index.html")
 @app.get("/health")
@@ -34,5 +32,8 @@ def approve(task_id:str):
     if not p.exists(): raise HTTPException(404,"task not found")
     task=json.loads(p.read_text(encoding="utf-8"))
     if task["status"]!="PROPOSED": raise HTTPException(409,"task is not awaiting approval")
-    task["status"]="APPROVED_QUEUED"; task["execution"]={"middleware":"docker-replica","mode":os.getenv("EXECUTION_MODE","mock"),"note":"Queued for isolated executor; real AWS actions remain disabled in mock mode."}; persist(task)
+    task["status"]="APPROVED_QUEUED"
+    task["execution"]={"middleware":"docker-replica","mode":os.getenv("EXECUTION_MODE","mock"),"phase":"QUEUED","started_at":None,"completed_at":None}
+    task["execution"]["note"]="Queued for isolated executor; the executor must persist a terminal result before completion."
+    persist(task)
     return task
